@@ -24,6 +24,7 @@ velInc = 1000
 playerVel = 2000
 
 sHit = pygame.mixer.Sound("data/hit.ogg")
+sSelect = pygame.mixer.Sound("data/select.ogg")
 sMusic = pygame.mixer.Sound("data/deez.ogg")
 
 #GameOver
@@ -37,26 +38,30 @@ class Donut:
         global dt
         global over
         global main
+        global donuts
+        global dodgedDonuts
+        global donutVelMult
+
+        if len(donuts) == 0: return
         for i in donuts:
-            global dodgedDonuts
-            if i.y > 480:
+            if i.y > 490:
                 donuts.remove(i)
                 dodgedDonuts += 1
                 continue
-            for i in donuts:
-                screen.blit(iDonut, (i.x, i.y))
+            
             colliding = playerCollision(i)
             if colliding:
                 print("COLLISION!!!!")
                 over = True
                 sHit.play()
                 main = False
-            i.y += i.vel * dt
+            i.y += i.vel * donutVelMult * dt
+            
                 
                 
     def spawn():
         rand = random.randint(0, res[0])
-        newDonut = Donut(rand, -25, 250)
+        newDonut = Donut(rand, -50, 250)
         donuts.append(newDonut)
 class Player:
     def __init__(self, x, y, vel):
@@ -70,17 +75,18 @@ class Player:
         self.vel = self.initVars[2]
 player = Player(250, 450, 0)
 
-####################################
-dt = 0
-prevTime = time.time()
+##EXTRA STUFF############################
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
+dt = 0
+prevTime = time.time()
 def deltaTime():
     global dt
     global prevTime
     now = time.time()
     dt = now - prevTime
     prevTime = now
+
 
 
 def playerCollision(donut):
@@ -94,17 +100,76 @@ def playerCollision(donut):
 
 main = False
 over = False
+menu = True
 
 pygame.mixer.music.load("data/deez.ogg")
 pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1)
+
+sHit.set_volume(0.7)
+
+#STATS ETC
+dodgedDonuts = 0
+donutDelay = 0.33
+donutDelay_ = 0.33
+
+diff = 1
+diffs = ["Easy", "Normal", "Hard"]
 while run:
+    poopy = time.time() + 1.5 / 0.352945328
+    poopIndex = 0
+    texts = [f"Press [Space]", "Live, laugh, eat donuts", "Long live the donut", "Did I mention donuts?"]
+    texts2 = f"[<] {diffs[diff % len(diffs)]} [>]"
+    textss = ["Easy", "Medium", "Hard"]
+    poopyLength = len(texts)
+    while menu:
+        clock.tick(60)
+        deltaTime()
+        screen.fill((255, 255, 255))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                menu = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    main = True
+                    sHit.play()
+                    menu = False
+                if event.key == pygame.K_LEFT:
+                    if diff > 0:
+                        diff -= 1
+                        texts2 = f"[<] {diffs[diff % len(diffs)]} [>]"
+                        sSelect.play()
+                    else:
+                        sHit.play()
+                if event.key == pygame.K_RIGHT:
+                    if diff < 2:
+                        diff += 1
+                        texts2 =  f"[<] {diffs[diff % len(diffs)]} [>]"
+                        sSelect.play()
+                    else:
+                        sHit.play()
+            
+        if time.time() >= poopy:
+            poopy = time.time() + 1.5 / 0.352945328
+            poopIndex += 1
+
+        text = texts[poopIndex % poopyLength]
+        bruh = font.render(text, True, (0, 0, 0))
+        bruh2 = font.render(texts2, True, (0, 0, 0))
+        title = font.render("DONUT DODGER (real version)", True, (0, 0, 0))
+        screen.blit(title, (res[0] / 2 - title.get_width() / 2, 40))
+        screen.blit(bruh, (res[0] / 2 - bruh.get_width() / 2, 200 - 2 *math.fabs(math.sin(time.time() / 0.352945328) * 10)))
+        screen.blit(bruh2, (res[0] / 2 - bruh2.get_width() / 2, 250 - 2 *math.fabs(math.sin(time.time() / 0.352945328) * 10)))
+        pygame.display.flip()
+
+    donutVelMult = (diff % len(diffs) + 1) * 0.75
     dodgedDonuts = 0
-    print("Reset dodged donuts to 0 lol xD")
-    player.reset()
-    donutDelay = 0.33
-    donutDelay_ = 0.33
+    donutDelay = 0.2
+    donutDelay_ = time.time() + donutDelay
     donuts = []
+    player.reset()
+    
     while main:
         clock.tick(60)
         deltaTime()
@@ -132,8 +197,8 @@ while run:
         player.vel = clamp(player.vel, -playerVel, playerVel)
         player.x += player.vel * dt
 
-        if player.x > res[0] - 25:
-            player.x = res[0] - 25
+        if player.x > res[0] - 50:
+            player.x = res[0] - 50
             player.vel = 0
         elif player.x < 0:
             player.x = 0
@@ -143,9 +208,13 @@ while run:
         #pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(player.x, player.y, 25, 25))
         Donut.update()
         screen.blit(iDing, (player.x, player.y))
+        for i in donuts:
+            screen.blit(iDonut, (i.x, i.y))
         pygame.display.flip()
+    
+    ###################################GAME OVER#########################################
+
     while over:
-        print("Game over")
         clock.tick(60)
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
@@ -153,13 +222,12 @@ while run:
                 run = False
                 over = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                main = True
+                menu = True
                 sHit.play()
                 over = False
-            
         text = f"u doged {dodgedDonuts} donut s"
         bruh = font.render(text, True, (255, 255, 255))
-        screen.blit(bruh, (0 + bruh.get_width() / 2, 200))
+        screen.blit(bruh, (0 + 25, 200))
         pygame.display.flip()
     
 pygame.quit()

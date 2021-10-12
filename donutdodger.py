@@ -225,7 +225,7 @@ while run:
                 menu = True
                 sHit.play()
                 over = False
-        text = f"u doged {dodgedDonuts} donut s"
+        text = f"u doged {dodgedDonuts} donut s on {diffs[diff]} mod e."
         bruh = font.render(text, True, (255, 255, 255))
         screen.blit(bruh, (0 + 25, 200))
         pygame.display.flip()

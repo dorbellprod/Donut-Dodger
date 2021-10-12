@@ -9,10 +9,14 @@ MM/DD/YYYY
 - Added music and sound.
 - Added friction to slippery Ding. I didn't mention this previously.
 
-0.2: 
+0.2: - 20:38 Armenia Time on 10/12/2021
 - Fixed flickering somewhat by placing rendering outside of Donut class
 - Added a basic main menu with silly text.
 - Fixed donuts immediately spawning below y -50 upon restarting!!
 - Added a difficulty setting to the main menu!!
 - Game over menu now redirects to the main menu.
 - Added sound to difficulty settings.
+
+0.2.1: - 21:44 Armenia Time on 10/12/2021
+- Displays difficulty on end screen.
+- Still working on that flicker fix :( but it's mostly fixed ig

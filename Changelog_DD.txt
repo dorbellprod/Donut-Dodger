@@ -1,0 +1,12 @@
+MM/DD/YYYY
+
+0.0: 2 hour version - ~20:00 Armenia Time on 10/08/2021
+- Flickery donut rendering.
+- Upon collision, window closes.
+
+0.1: Slightly updated version - 21:55 Armenia Time on 10/11/2021
+- Added game over menu and restarting.
+- Added music and sound.
+
+0.2: 
+- Fixed flickering somewhat by placing rendering outside of Donut class

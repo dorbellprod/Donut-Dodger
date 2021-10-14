@@ -316,6 +316,8 @@ while run:
         print(f"your last high score on {diffs[diff]} was {prevHighScore}")
         if dodgedDonuts >= int(prevHighScore):
             text = f"u got {dodgedDonuts}! new record f or {diffs[diff]}!!"
+
+            #I don't care how inefficient this is. It works!
             hiScores[diff] = dodgedDonuts
             file = open("data/hi.txt", "w")
             file.close()

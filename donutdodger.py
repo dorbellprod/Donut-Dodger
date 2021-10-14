@@ -2,20 +2,44 @@ import pygame
 import time
 import random
 import math
+import os
 
 gameVersion = "0.2.3"
 
+try:
+    open('info.txt')
+    gi = {}
+    gameInfo = open('info.txt', 'r')
 
-gi = {}
-gameInfo = open('info.txt', 'r')
+    gii = gameInfo.readlines()
+    for line in gii:
+        line = line.rstrip('\n')
+        t, v = line.split(':')
+        gi[t] = v
 
-gii = gameInfo.readlines()
-for line in gii:
-    line = line.rstrip('\n')
-    t, v = line.split(':')
-    gi[t] = v
+    print(f"GAME INFO LOADED: {gi}")
+except FileNotFoundError:
+    print("INFO FILE NOT FOUND! GAME INFO COULD NOT BE LOADED.")
 
-print(f"GAME INFO LOADED: {gi}")
+
+hiScores = [0, 0, 0]
+
+try:
+  h = open('data/hi.txt', "r")
+  hh = h.readlines()
+  i = 0
+  for line in hh:
+      line = line.strip('\n')
+      mode, score = line.split(':')
+      hiScores[i] = score
+      i += 1
+  print(f"HIGH SCORES LOADED: {hiScores}")
+except FileNotFoundError:
+    hs = open('data/hi.txt', "w")
+    hs.write("e:0\nn:0\nh:0")
+    hs.close()
+    print("NEW HIGH SCORE FILE MADE.")
+
 
 pygame.init()
 res = (500, 500)
@@ -43,6 +67,8 @@ sSelect = pygame.mixer.Sound("data/select.ogg")
 sMusic = pygame.mixer.Sound("data/deez.ogg")
 
 #GameOver
+
+smallFont = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 10)
 font = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 20)
 bigFont = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 40)
 class Donut:
@@ -149,7 +175,12 @@ while run:
     fps_cap = 60
     fps_length = len(fps_choices)
 
-    
+    easy = font.render(f"Easy {hiScores[0]}", True, (128, 128, 128))
+    norm = font.render(f"Norm {hiScores[1]}", True, (128, 128, 128))
+    hard = font.render(f"Hard {hiScores[2]}", True, (128, 128, 128))
+    scores = [easy, norm, hard]
+    scoreSpacing = 25
+
     while menu:
         clock.tick(fps_cap)
         deltaTime()
@@ -163,10 +194,12 @@ while run:
                     main = True
                     sHit.play()
                     menu = False
+                """#DEBUGGING ONLY
                 if event.key == pygame.K_f:
                     fps_choice += 1
                     fps_cap = fps_choices[fps_choice % fps_length]
                     print(f"FPS IS NOW {fps_cap}")
+                """
                 if event.key == pygame.K_LEFT:
                     if diff > 0:
                         diff -= 1
@@ -193,6 +226,11 @@ while run:
         screen.blit(title, (res[0] / 2 - title.get_width() / 2, 40))
         screen.blit(bruh, (res[0] / 2 - bruh.get_width() / 2, 200 - 2 *math.fabs(math.sin(time.time() / 0.352945328) * 10)))
         screen.blit(bruh2, (res[0] / 2 - bruh2.get_width() / 2, 250 - 2 *math.fabs(math.sin(time.time() / 0.352945328) * 10)))
+
+        space = 0
+        for i in scores:
+            screen.blit(i, (5, 400 + space))
+            space += scoreSpacing
         pygame.display.flip()
 
     donutVelMult = (diff % len(diffs) + 1) * 0.75
@@ -209,7 +247,9 @@ while run:
     ang = 0
 
     while main:
-        clock.tick(60)
+        prevHighScore = hiScores[diff]
+        print(f"LAST HIGH ON {diffs[diff]} IS {prevHighScore}")
+        clock.tick(fps_cap)
         deltaTime()
         screen.fill((255, 255, 255))
         for event in pygame.event.get():
@@ -271,7 +311,19 @@ while run:
                 menu = True
                 sHit.play()
                 over = False
-        text = f"u doged {dodgedDonuts} donut s on {diffs[diff]} mod e."
+        text = ""
+        prevHighScore = hiScores[diff]
+        print(f"your last high score on {diffs[diff]} was {prevHighScore}")
+        if dodgedDonuts >= int(prevHighScore):
+            text = f"u got {dodgedDonuts}! new record f or {diffs[diff]}!!"
+            hiScores[diff] = dodgedDonuts
+            file = open("data/hi.txt", "w")
+            file.close()
+            with open("data/hi.txt", "w") as f:
+                f.write(f"e:{hiScores[0]}\nn:{hiScores[1]}\nh:{hiScores[2]}")
+                    
+        else:
+            text = f"u doged {dodgedDonuts} donut s on {diffs[diff]} mod e."
         bruh = font.render(text, True, (255, 255, 255))
         screen.blit(bruh, (0 + 25, 200))
         pygame.display.flip()

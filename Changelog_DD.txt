@@ -29,6 +29,9 @@ MM/DD/YYYY
 - Finally changed the caption from "you're mom" to "Donut Dodger."
 - Cenetered the player sprite and added rotations!
 
-0.2.4:
+0.2.4: - 14:12 Armenia Time on 10/14/2021
 - Fixed weird collision with edges.
 - Added info.txt.
+
+0.3:
+- Added high scores!! WOOHOO!!!

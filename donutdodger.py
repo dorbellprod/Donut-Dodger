@@ -4,8 +4,9 @@ import random
 import math
 import os
 
-gameVersion = "0.2.3"
+#MAIN INITIALIZATION###################################################################
 
+#LOAD GAME INFO FROM INFO.TXT
 try:
     open('info.txt')
     gi = {}
@@ -21,9 +22,9 @@ try:
 except FileNotFoundError:
     print("INFO FILE NOT FOUND! GAME INFO COULD NOT BE LOADED.")
 
+hiScores = [0, 0, 0, 0]
 
-hiScores = [0, 0, 0]
-
+#LOAD HIGH SCORES FROM HI.TXT
 try:
   h = open('data/hi.txt', "r")
   hh = h.readlines()
@@ -40,34 +41,46 @@ except FileNotFoundError:
     hs.close()
     print("NEW HIGH SCORE FILE MADE.")
 
+#PYGAME INITIALIZATION
+run = True
 
 pygame.init()
 res = (500, 500)
 screen = pygame.display.set_mode(res)
 pygame.display.set_caption(f"{gi['caption']} {gi['version']}")
-run = True
 clock = pygame.time.Clock()
 donutSize = 35
 playerSize = 50
 playerHalfSize = playerSize / 2
 
+#SPRITES
 iDonut = pygame.image.load("data/donut.png").convert_alpha()
 iDonut = pygame.transform.scale(iDonut, (donutSize, donutSize))
 
 iDing = pygame.image.load("data/ding.jpg").convert()
 iDing = pygame.transform.scale(iDing, (playerSize, playerSize))
 
-donuts = []
-
-velInc = 1000
-playerVel = 2000
-
+#SOUND
 sHit = pygame.mixer.Sound("data/hit.ogg")
 sSelect = pygame.mixer.Sound("data/select.ogg")
 sMusic = pygame.mixer.Sound("data/deez.ogg")
 
-#GameOver
+#SSHH!!
+tbg = "data/tetrabitgaming/"
+s0 = tbg + '0.mp3'
+s1 = tbg + '1.ogg'
 
+musicList = ['data/deez.ogg', s1]
+musicIndex = 0
+#DONUTS
+donuts = []
+
+#PLAYER VALUES
+velInc = 1000
+playerVel = 2000
+
+
+#FONTS
 smallFont = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 10)
 font = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 20)
 bigFont = pygame.font.SysFont(("Futura", "Arial Black", "Arial", "Courier New"), 40)
@@ -101,9 +114,7 @@ class Donut:
                 sHit.play()
                 main = False
             i.y += i.vel * donutVelMult * dt
-            
-                
-                
+             
     def spawn():
         rand = random.randint(0, res[0])
         newDonut = Donut(rand, -50, 250)
@@ -114,15 +125,65 @@ class Player:
         self.y = y
         self.vel = vel
         self.initVars = [x, y, vel]
+
+    def update(self):
+        global ang
+        if int(self.vel) != 0:
+            if self.vel > 0:
+                self.vel -= velInc / 4 * dt
+            elif self.vel < 0:
+                self.vel += velInc / 4 * dt
+        else:
+            self.vel = 0
+        if math.fabs(ang) < 0.2:
+            ang = 0
+        ang += 0 - ang * dt * 10
+
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.vel -= int(velInc * dt)
+            ang += 35 * dt
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.vel += int(velInc * dt)
+            ang -= 35 * dt
+        ang = clamp(ang, -50, 50)
+
+        self.vel = clamp(self.vel, -playerVel, playerVel)
+        self.x += self.vel * dt
+
+        if self.x + playerHalfSize >= res[0]:
+            self.x = res[0] - playerHalfSize
+            self.vel = 0
+        elif self.x - playerHalfSize <= 0:
+            self.x = playerHalfSize
+            self.vel = 0
     def reset(self):
         self.x = self.initVars[0]
         self.y = self.initVars[1]
         self.vel = self.initVars[2]
+
+class SoundManager:
+    global musicList
+    def setMusic(index, vol, loop):
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(musicList[index])
+        pygame.mixer.music.set_volume(vol)
+        pygame.mixer.music.play(loop)
+    def playSoundVol(sound, vol):
+        sound.set_volume(vol)
+        sound.play()
+    def playSound(sound):
+        sound.play()
+#INITIALIZE PLAYER
 player = Player(250, 475, 0)
 
-##EXTRA STUFF############################
+#CLAMP, DELTATIME, COLLISION FUNCTIONS
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
+def playerCollision(donut):
+    global player
+    newDonutCollider = [donut.x + 8, donut.x + donutSize - 8, donut.y + 8, donut.y + donutSize - 8]
+    return player.x - playerHalfSize < newDonutCollider[1] and player.x - playerHalfSize + playerSize > newDonutCollider[0] and player.y - playerHalfSize < newDonutCollider[3] and player.y - playerHalfSize + playerSize > newDonutCollider[2]
+
 dt = 0
 prevTime = time.time()
 def deltaTime():
@@ -133,58 +194,70 @@ def deltaTime():
     prevTime = now
 
 
-
-def playerCollision(donut):
-    global player
-    newDonutCollider = [donut.x + 5, donut.x + donutSize - 5, donut.y + 5, donut.y + donutSize - 5]
-    return player.x - playerHalfSize < newDonutCollider[1] and player.x - playerHalfSize + playerSize > newDonutCollider[0] and player.y - playerHalfSize < newDonutCollider[3] and player.y - playerHalfSize + playerSize > newDonutCollider[2]
-####################################
-
-
-#print(donuts)
-
+#LOOP BOOLS
+splash = False
 main = False
 over = False
-
 menu = True
 
+#MUSIC AND SOUND INITIALIZATION
 pygame.mixer.music.load("data/deez.ogg")
 pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1)
-
 sHit.set_volume(0.7)
 
-#STATS ETC
+#STATS AND DIFFICULTY
 dodgedDonuts = 0
 donutDelay = 0.33
 donutDelay_ = 0.33
-
 diff = 1
-diffs = ["Easy", "Normal", "Hard"]
+diffs = ["Easy", "Normal", "Hard", "Impossible"]
+
+#Extra 😏
+konami = [pygame.K_UP, pygame.K_UP, pygame.K_DOWN, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_b, pygame.K_a] 
+konamiIndex = 0
+konamiDelay, konamiMaxDelay = 0, 0.6
+
+specialMode = False
 while run:
+    #MAIN MENU TEXT
     poopy = time.time() + 1.5 / 0.352945328
     poopIndex = 0
-    texts = [f"Press [Space]", "Live, laugh, eat donuts", "Long live the donut", "Did I mention donuts?"]
+    texts = [f"Press [Space]", "Live, laugh, eat donuts", "Long live the donut", "Did I mention donuts?", "Press [Space] already.", "Donut shop!!"]
     texts2 = f"[<] {diffs[diff % len(diffs)]} [>]"
     textss = ["Easy", "Medium", "Hard"]
     poopyLength = len(texts)
-
-    #FPS
+    #FPS DEBUG
     fps_choice = 2
     fps_choices = [15, 30, 60, 120, 144, 165, 240, 999]
     fps_cap = 60
     fps_length = len(fps_choices)
-
+    #SCORE RENDERING
     easy = font.render(f"Easy {hiScores[0]}", True, (128, 128, 128))
     norm = font.render(f"Norm {hiScores[1]}", True, (128, 128, 128))
     hard = font.render(f"Hard {hiScores[2]}", True, (128, 128, 128))
-    scores = [easy, norm, hard]
+    imp = font.render(f"Imp {hiScores[3]}", True, (128, 128, 128))
+    scores = [easy, norm, hard, imp]
     scoreSpacing = 25
-
+    while splash:
+        pygame.event.get()
+        screen.fill((255, 255, 255))
+        splasht = font.render("loading deez nuts... they are quite large", False, (128, 128, 128))
+        screen.blit(splasht, (res[0] / 2 - (splasht.get_width() / 2), res[1] / 2 - (splasht.get_height() / 2)))
+        pygame.display.flip()
+        time.sleep(2)
+        menu = True
+        splash = False
+    #MAIN MENU##################
     while menu:
+        if splash: continue
         clock.tick(fps_cap)
         deltaTime()
         screen.fill((255, 255, 255))
+
+        konamiDelay -= dt
+        konamiDelay = clamp(konamiDelay, 0, konamiMaxDelay)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -192,8 +265,8 @@ while run:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     main = True
-                    sHit.play()
                     menu = False
+                    SoundManager.playSound(sHit)
                 """#DEBUGGING ONLY
                 if event.key == pygame.K_f:
                     fps_choice += 1
@@ -204,16 +277,31 @@ while run:
                     if diff > 0:
                         diff -= 1
                         texts2 = f"[<] {diffs[diff % len(diffs)]} [>]"
-                        sSelect.play()
+                        SoundManager.playSound(sSelect)
                     else:
-                        sHit.play()
+                        SoundManager.playSound(sHit)
                 if event.key == pygame.K_RIGHT:
-                    if diff < 2:
+                    if diff < len(diffs) - 1:
                         diff += 1
                         texts2 =  f"[<] {diffs[diff % len(diffs)]} [>]"
-                        sSelect.play()
+                        SoundManager.playSound(sSelect)
                     else:
-                        sHit.play()
+                        SoundManager.playSound(sHit)
+                #KONAMI CODE
+                if konamiDelay == 0:
+                    konamiIndex = 0
+                if event.key == konami[konamiIndex] and konamiIndex < 10:
+                    konamiDelay = konamiMaxDelay
+                    konamiIndex += 1
+                    print(bin(konamiIndex)) #In binary... for NO REASON!!!
+        
+        if konamiIndex == 10:
+            SoundManager.playSound(sHit)
+            specialMode = not specialMode
+            print("SPECIAL MODE TOGGLED")
+            konamiIndex = 0 
+            musicIndex += 1
+            SoundManager.setMusic(musicIndex % len(musicList), 0.5, -1)
             
         if time.time() >= poopy:
             poopy = time.time() + 1.5 / 0.352945328
@@ -233,22 +321,32 @@ while run:
             space += scoreSpacing
         pygame.display.flip()
 
+    #SET DONUT XDDXDXD
+    _iDonut = iDonut
+    if specialMode:
+        _iDonut = iDing
+        _iDonut = pygame.transform.scale(_iDonut, (donutSize, donutSize))
+    else:
+        _iDonut = iDonut
+        _iDonut = pygame.transform.scale(_iDonut, (donutSize, donutSize))
+    
+
+    #GAME INITIALIZATION#######
+    #RESET VALUES
     donutVelMult = (diff % len(diffs) + 1) * 0.75
     dodgedDonuts = 0
     donutDelay = 0.2
     donutDelay_ = time.time() + donutDelay
     donuts = []
     player.reset()
-
     #POOLING
     pooled = False
-
     #angle
     ang = 0
 
+    ###################################GAME START########################################
+    
     while main:
-        prevHighScore = hiScores[diff]
-        print(f"LAST HIGH ON {diffs[diff]} IS {prevHighScore}")
         clock.tick(fps_cap)
         deltaTime()
         screen.fill((255, 255, 255))
@@ -262,40 +360,12 @@ while run:
                 donutDelay_ = time.time() + donutDelay
                 Donut.spawn()
 
-        if int(player.vel) != 0:
-            if player.vel > 0:
-                player.vel -= velInc / 4 * dt
-            elif player.vel < 0:
-                player.vel += velInc / 4 * dt
-        else:
-            player.vel = 0
-
-        ang += 0 - ang * dt * 5
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.vel -= int(velInc * dt)
-            ang += 25 * dt
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.vel += int(velInc * dt)
-            ang -= 25 * dt
-        ang = clamp(ang, -50, 50)
-
-        player.vel = clamp(player.vel, -playerVel, playerVel)
-        player.x += player.vel * dt
-
-        if player.x + playerHalfSize >= res[0]:
-            player.x = res[0] - playerHalfSize
-            player.vel = 0
-        elif player.x - playerHalfSize <= 0:
-            player.x = playerHalfSize
-            player.vel = 0
-
-        
-        #pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(player.x, player.y, 25, 25))
+        player.update()
         Donut.update()
         sPlayer = pygame.transform.rotate(iDing, ang)
         screen.blit(sPlayer, (player.x - playerHalfSize, player.y - playerHalfSize))
         for i in donuts:
-            screen.blit(iDonut, (i.x, i.y))
+            screen.blit(_iDonut, (i.x, i.y))
         pygame.display.flip()
     
     ###################################GAME OVER#########################################
@@ -309,20 +379,17 @@ while run:
                 over = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 menu = True
-                sHit.play()
+                SoundManager.playSound(sHit)
                 over = False
         text = ""
         prevHighScore = hiScores[diff]
-        print(f"your last high score on {diffs[diff]} was {prevHighScore}")
         if dodgedDonuts >= int(prevHighScore):
             text = f"u got {dodgedDonuts}! new record f or {diffs[diff]}!!"
 
-            #I don't care how inefficient this is. It works!
             hiScores[diff] = dodgedDonuts
             file = open("data/hi.txt", "w")
+            file.write(f"e:{hiScores[0]}\nn:{hiScores[1]}\nh:{hiScores[2]}\ni:{hiScores[3]}")
             file.close()
-            with open("data/hi.txt", "w") as f:
-                f.write(f"e:{hiScores[0]}\nn:{hiScores[1]}\nh:{hiScores[2]}")
                     
         else:
             text = f"u doged {dodgedDonuts} donut s on {diffs[diff]} mod e."

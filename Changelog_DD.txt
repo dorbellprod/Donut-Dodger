@@ -1,3 +1,4 @@
+DONUT DODGER CHANGELOG - ALL CHANGES ARE LISTED IN CHRONOLOGICAL ORDER AND ARE NOT NECESSARILY DONE ON THE SAME DAY.
 MM/DD/YYYY
 
 0.0: 2 hour version - ~20:00 Armenia Time on 10/08/2021
@@ -35,3 +36,18 @@ MM/DD/YYYY
 
 0.3: - 15:22 Armenia Time on 10/14/2021
 - Added high scores!! WOOHOO!!!
+
+0.4 - UNRELEASED 10/15/2021
+- Somewhat optimized high score writing trololololo
+- Tweaked some angular values slightly.
+- Moved player value updates to the player class (player.update).
+- Code updates: removed unnecessary prints, added many comments.
+- KONAMI CODE! Enter the Konami Code in the menu to toggle a secret mode 😏
+
+0.5 - 20:31 Armenia Time on 10/18/2021
+- Updated secret mode! Added some more secrets 😳
+- Slighly decreased donut collider size.
+- Updated player rotation: no longer does that weird pixel rearrangement when rotates back to initial angle; checks if angle is around 0.2 and locks it to 0.
+- Code update: added a SoundManager class. Might switch this for a Sound object class that contains useful functions...
+- Added IMPOSSIBLE MODE!! (not actually impossible but still... muahahahahaha......)
+- At this state, the game has exactly 400 lines of code, including empty lines.
